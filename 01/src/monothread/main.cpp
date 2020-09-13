@@ -1,4 +1,4 @@
-#include <vector> 
+#include <vector>
 #include <ctime>
 #include <iostream>
 #include <string>
@@ -7,12 +7,12 @@
 #include <list>
 #pragma warning (disable: 4996)
 
-// Функция преобразования строки в число
+// Р¤СѓРЅРєС†РёСЏ РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ СЃС‚СЂРѕРєРё РІ С‡РёСЃР»Рѕ
 int StrToInt(char *s)
 {
-	int temp = 0; // число
+	int temp = 0; // С‡РёСЃР»Рѕ
 	int i = 0;
-	int sign = 0; // знак числа 0- положительное, 1 — отрицательное
+	int sign = 0; // Р·РЅР°Рє С‡РёСЃР»Р° 0- РїРѕР»РѕР¶РёС‚РµР»СЊРЅРѕРµ, 1 вЂ” РѕС‚СЂРёС†Р°С‚РµР»СЊРЅРѕРµ
 	if (s[i] == '-')
 	{
 		sign = 1;
@@ -53,14 +53,14 @@ int main(int argc_p, char ** argv_p) {
 		return -1;
 	}
 
-	// Для общей части имени входных файлов
+	// Р”Р»СЏ РѕР±С‰РµР№ С‡Р°СЃС‚Рё РёРјРµРЅРё РІС…РѕРґРЅС‹С… С„Р°Р№Р»РѕРІ
 	if (strcmp(argv_p[2], "") == 0) {
 		std::cerr << "Invalid command line arguments" << std::endl;
 		system("pause");
 		return -1;
 	}
 
-	// Для проверки выходного файла на тип *.csv
+	// Р”Р»СЏ РїСЂРѕРІРµСЂРєРё РІС‹С…РѕРґРЅРѕРіРѕ С„Р°Р№Р»Р° РЅР° С‚РёРї *.csv
 	if (strcmp(argv_p[4], "") == 0) {
 		std::cerr << "Invalid command line arguments" << std::endl;
 		system("pause");
@@ -77,11 +77,11 @@ int main(int argc_p, char ** argv_p) {
 		}
 	}
 
-	// Абсолютный путь проекта + ..\..\test
+	// РђР±СЃРѕР»СЋС‚РЅС‹Р№ РїСѓС‚СЊ РїСЂРѕРµРєС‚Р° + ..\..\test
 	std::string path = getenv("WORK_DIR");
 	path += "\\";
 
-	// Запись всех текстовых файлов 
+	// Р—Р°РїРёСЃСЊ РІСЃРµС… С‚РµРєСЃС‚РѕРІС‹С… С„Р°Р№Р»РѕРІ
 	std::system("dir /b /o:d %WORK_DIR%\\*.txt > %WORK_DIR%\\list.txt");
 	std::vector<std::string>	text_names;
 	std::vector<std::string>	names;
@@ -96,7 +96,7 @@ int main(int argc_p, char ** argv_p) {
 
 	std::string fileInputName = argv_p[2];
 
-	// Запись имен нужных файлов в map
+	// Р—Р°РїРёСЃСЊ РёРјРµРЅ РЅСѓР¶РЅС‹С… С„Р°Р№Р»РѕРІ РІ map
 	std::ifstream list(path + "list.txt", std::ios::in);
 	if (!list.is_open()) {
 		std::cerr << "*.txt files not found" << std::endl;
@@ -119,8 +119,8 @@ int main(int argc_p, char ** argv_p) {
 	auto it1 = text_names.begin();
 	auto it2 = names.begin();
 
-	// Открытие каждого текстового файла для нахождения среднего значения и составление пар [человек(название файла)] -> Ср. зп
-	// И запись среднего значения в список для работы с суммами
+	// РћС‚РєСЂС‹С‚РёРµ РєР°Р¶РґРѕРіРѕ С‚РµРєСЃС‚РѕРІРѕРіРѕ С„Р°Р№Р»Р° РґР»СЏ РЅР°С…РѕР¶РґРµРЅРёСЏ СЃСЂРµРґРЅРµРіРѕ Р·РЅР°С‡РµРЅРёСЏ Рё СЃРѕСЃС‚Р°РІР»РµРЅРёРµ РїР°СЂ [С‡РµР»РѕРІРµРє(РЅР°Р·РІР°РЅРёРµ С„Р°Р№Р»Р°)] -> РЎСЂ. Р·Рї
+	// Р Р·Р°РїРёСЃСЊ СЃСЂРµРґРЅРµРіРѕ Р·РЅР°С‡РµРЅРёСЏ РІ СЃРїРёСЃРѕРє РґР»СЏ СЂР°Р±РѕС‚С‹ СЃ СЃСѓРјРјР°РјРё
 	while (it1 != text_names.end() && it2 != names.end()) {
 		std::ifstream fin(path + *it1, std::ios::in);
 		int average_salary = 0;
@@ -146,7 +146,7 @@ int main(int argc_p, char ** argv_p) {
 	int count_for_param = 0;
 	int int_param = StrToInt(param);
 
-	// зп ниже среднего
+	// Р·Рї РЅРёР¶Рµ СЃСЂРµРґРЅРµРіРѕ
 	for (int n : list_average_salary_humans) {
 		if (n < int_param)
 			count_for_param++;
@@ -160,7 +160,7 @@ int main(int argc_p, char ** argv_p) {
 	high_salary = list_average_salary_humans;
 	high_salary.resize(size);
 
-	// 5% на max и min зп
+	// 5% РЅР° max Рё min Р·Рї
 	for (auto it = average_salary_humans.begin(); it != average_salary_humans.end(); it++) {
 		for (int n : low_salary) {
 			if (it->second == n)
@@ -173,17 +173,17 @@ int main(int argc_p, char ** argv_p) {
 		}
 	}
 
-	// Работа с csv файлом
+	// Р Р°Р±РѕС‚Р° СЃ csv С„Р°Р№Р»РѕРј
 	std::string fileOutputName = argv_p[4];
 	std::ofstream fout(path + fileOutputName, std::ios::out);
 
-	fout << "Гражданин, Среднемесячная зарплата" << "\n";
+	fout << "Р“СЂР°Р¶РґР°РЅРёРЅ, РЎСЂРµРґРЅРµРјРµСЃСЏС‡РЅР°СЏ Р·Р°СЂРїР»Р°С‚Р°" << "\n";
 	for (auto it = average_salary_humans.begin(); it != average_salary_humans.end(); it++) {
 		fout << it->first << ", " << it->second << "\n";
 	}
 
 	fout << "\n";
-	fout << "5% граждан с max зп, 5% граждан с min зп" << "\n";
+	fout << "5% РіСЂР°Р¶РґР°РЅ СЃ max Р·Рї, 5% РіСЂР°Р¶РґР°РЅ СЃ min Р·Рї" << "\n";
 
 	auto it3 = human_high_salary.begin();
 	auto it4 = human_low_salary.begin();
@@ -195,7 +195,7 @@ int main(int argc_p, char ** argv_p) {
 	}
 	fout << "\n";
 
-	fout << "Количество граждан с зп ниже среднего" << "\n";
+	fout << "РљРѕР»РёС‡РµСЃС‚РІРѕ РіСЂР°Р¶РґР°РЅ СЃ Р·Рї РЅРёР¶Рµ СЃСЂРµРґРЅРµРіРѕ" << "\n";
 	fout << count_for_param << "\n";
 
 	fout.close();

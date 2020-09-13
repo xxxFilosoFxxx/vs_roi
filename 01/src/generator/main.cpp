@@ -1,4 +1,4 @@
-#include <vector> 
+#include <vector>
 #include <ctime>
 #include <iostream>
 #include <string>
@@ -50,7 +50,7 @@ int main(int argc_p, char ** argv_p) {
 	std::vector<std::string> names;
 	std::string s;
 
-	// Абсолютный путь проекта + ..\..\test
+	// РђР±СЃРѕР»СЋС‚РЅС‹Р№ РїСѓС‚СЊ РїСЂРѕРµРєС‚Р° + ..\..\test
 	std::string path = getenv("WORK_DIR");
 	path += "\\";
 
