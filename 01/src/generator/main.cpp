@@ -1,9 +1,8 @@
-#include <vector>
+#include <vector> 
 #include <ctime>
 #include <iostream>
 #include <string>
 #include <fstream>
-#pragma warning (disable: 4996)
 
 int main(int argc_p, char ** argv_p) {
 	std::cout << "\n ---------------------------------\n";
@@ -50,11 +49,8 @@ int main(int argc_p, char ** argv_p) {
 	std::vector<std::string> names;
 	std::string s;
 
-	// Абсолютный путь проекта + ..\..\test
-	std::string path = getenv("WORK_DIR");
-	path += "\\";
 
-	std::ifstream file(path + fileCfgName, std::ios::in);
+	std::ifstream file(fileCfgName, std::ios::in);
 	if (!file.is_open()) {
 		std::cerr << "Invalid file *.cfg" << std::endl;
 		system("pause");
@@ -74,7 +70,7 @@ int main(int argc_p, char ** argv_p) {
 	}*/
 
 	for (auto it = names.begin(); it != names.end(); it++) {
-		std::ofstream fout(path + *it, std::ios::out);
+		std::ofstream fout(*it, std::ios::out);
 		for (int i = 0; i < 12; i++) {
 			random_values[i] = min + (double)rand() / (RAND_MAX + 1)*(max - min);
 			fout << random_values[i] << std::endl;

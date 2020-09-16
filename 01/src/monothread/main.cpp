@@ -5,7 +5,6 @@
 #include <fstream>
 #include <map>
 #include <list>
-#pragma warning (disable: 4996)
 
 // Функция преобразования строки в число
 int StrToInt(char *s)
@@ -77,12 +76,8 @@ int main(int argc_p, char ** argv_p) {
 		}
 	}
 
-	// Абсолютный путь проекта + ..\..\test
-	std::string path = getenv("WORK_DIR");
-	path += "\\";
-
 	// Запись всех текстовых файлов
-	std::system("dir /b /o:d %WORK_DIR%\\*.txt > %WORK_DIR%\\list.txt");
+	std::system("dir /b /o:d *.txt > list.txt");
 	std::vector<std::string>	text_names;
 	std::vector<std::string>	names;
 	std::list<int>				list_average_salary_humans;
@@ -97,7 +92,7 @@ int main(int argc_p, char ** argv_p) {
 	std::string fileInputName = argv_p[2];
 
 	// Запись имен нужных файлов в map
-	std::ifstream list(path + "list.txt", std::ios::in);
+	std::ifstream list("list.txt", std::ios::in);
 	if (!list.is_open()) {
 		std::cerr << "*.txt files not found" << std::endl;
 		system("pause");
@@ -122,7 +117,7 @@ int main(int argc_p, char ** argv_p) {
 	// Открытие каждого текстового файла для нахождения среднего значения и составление пар [человек(название файла)] -> Ср. зп
 	// И запись среднего значения в список для работы с суммами
 	while (it1 != text_names.end() && it2 != names.end()) {
-		std::ifstream fin(path + *it1, std::ios::in);
+		std::ifstream fin(*it1, std::ios::in);
 		int average_salary = 0;
 		for (int i = 0; i < 12; i++) {
 			int num;
@@ -175,7 +170,7 @@ int main(int argc_p, char ** argv_p) {
 
 	// Работа с csv файлом
 	std::string fileOutputName = argv_p[4];
-	std::ofstream fout(path + fileOutputName, std::ios::out);
+	std::ofstream fout(fileOutputName, std::ios::out);
 
 	fout << "Гражданин, Среднемесячная зарплата" << "\n";
 	for (auto it = average_salary_humans.begin(); it != average_salary_humans.end(); it++) {
