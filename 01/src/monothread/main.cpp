@@ -6,39 +6,6 @@
 #include <map>
 #include <list>
 
-// Функция преобразования строки в число
-int StrToInt(char *s)
-{
-	int temp = 0; // число
-	int i = 0;
-	int sign = 0; // знак числа 0- положительное, 1 — отрицательное
-	if (s[i] == '-')
-	{
-		sign = 1;
-		i++;
-	}
-	while (s[i] >= 0x30 && s[i] <= 0x39)
-	{
-		temp = temp + (s[i] & 0x0F);
-		temp = temp * 10;
-		i++;
-	}
-
-	if (strlen(s) != i) {
-		std::cerr << "Negative parameter" << std::endl;
-		system("pause");
-		return -1;
-	}
-
-	temp = temp / 10;
-	if (sign == 1) {
-		std::cerr << "Negative parameter" << std::endl;
-		system("pause");
-		return -1;
-	}
-	return(temp);
-}
-
 int main(int argc_p, char ** argv_p) {
 	std::cout << "\n ---------------------------------\n";
 	const std::size_t argumetsAmount_cl = argc_p;
@@ -46,37 +13,24 @@ int main(int argc_p, char ** argv_p) {
 		std::cout << "\t" << argv_p[i] << "\n";
 	std::cout << " ---------------------------------\n";
 
-	if (strcmp(argv_p[1], "--input") != 0 || strcmp(argv_p[3], "--output") != 0 || strcmp(argv_p[5], "--param") != 0) {
+	if (std::string(argv_p[1]) != "--input" || std::string(argv_p[3]) != "--output" || std::string(argv_p[5]) != "--param") {
 		std::cerr << "Invalid command line arguments" << std::endl;
-		system("pause");
 		return -1;
 	}
 
-	// Для общей части имени входных файлов
-	if (strcmp(argv_p[2], "") == 0) {
+	if (std::string(argv_p[2]) == "" || std::string(argv_p[4]) == "" || std::string(argv_p[6]) == "") {
 		std::cerr << "Invalid command line arguments" << std::endl;
-		system("pause");
 		return -1;
 	}
 
-	// Для проверки выходного файла на тип *.csv
-	if (strcmp(argv_p[4], "") == 0) {
-		std::cerr << "Invalid command line arguments" << std::endl;
-		system("pause");
+	std::string fileCfgName = argv_p[4];
+	std::string name_csv = fileCfgName.substr(fileCfgName.length() - 4, 4);
+
+	if (name_csv != ".csv") {
+		std::cerr << "Invalid file *.csv" << std::endl;
 		return -1;
 	}
-	else {
-		std::string fileCfgName = argv_p[4];
-		std::string name_csv = fileCfgName.substr(fileCfgName.length() - 4, 4);
 
-		if (name_csv != ".csv") {
-			std::cerr << "Invalid file *.csv" << std::endl;
-			system("pause");
-			return -1;
-		}
-	}
-
-	// Запись всех текстовых файлов
 	std::system("dir /b /o:d *.txt > list.txt");
 	std::vector<std::string>	text_names;
 	std::vector<std::string>	names;
@@ -91,11 +45,9 @@ int main(int argc_p, char ** argv_p) {
 
 	std::string fileInputName = argv_p[2];
 
-	// Запись имен нужных файлов в map
 	std::ifstream list("list.txt", std::ios::in);
 	if (!list.is_open()) {
 		std::cerr << "*.txt files not found" << std::endl;
-		system("pause");
 		return -1;
 	}
 	else {
@@ -114,8 +66,6 @@ int main(int argc_p, char ** argv_p) {
 	auto it1 = text_names.begin();
 	auto it2 = names.begin();
 
-	// Открытие каждого текстового файла для нахождения среднего значения и составление пар [человек(название файла)] -> Ср. зп
-	// И запись среднего значения в список для работы с суммами
 	while (it1 != text_names.end() && it2 != names.end()) {
 		std::ifstream fin(*it1, std::ios::in);
 		int average_salary = 0;
@@ -125,7 +75,6 @@ int main(int argc_p, char ** argv_p) {
 			average_salary += num;
 		}
 		average_salary = average_salary / 12;
-		// std::cout << "A citizen '" << *it2 << "' has an average salary -> " << average_salary << std::endl;
 		average_salary_humans[*it2] = average_salary;
 		list_average_salary_humans.push_back(average_salary);
 		fin.close();
@@ -134,14 +83,12 @@ int main(int argc_p, char ** argv_p) {
 	}
 
 	int size = list_average_salary_humans.size();
-	size = size * 0.05;
-	// std::cout << i_map << std::endl;
+	size = int(size * 0.05);
 
-	char* param = argv_p[6];
+	std::string param = argv_p[6];
 	int count_for_param = 0;
-	int int_param = StrToInt(param);
+	int int_param = std::stoi(param);
 
-	// зп ниже среднего
 	for (int n : list_average_salary_humans) {
 		if (n < int_param)
 			count_for_param++;
@@ -155,7 +102,6 @@ int main(int argc_p, char ** argv_p) {
 	high_salary = list_average_salary_humans;
 	high_salary.resize(size);
 
-	// 5% на max и min зп
 	for (auto it = average_salary_humans.begin(); it != average_salary_humans.end(); it++) {
 		for (int n : low_salary) {
 			if (it->second == n)
@@ -168,7 +114,6 @@ int main(int argc_p, char ** argv_p) {
 		}
 	}
 
-	// Работа с csv файлом
 	std::string fileOutputName = argv_p[4];
 	std::ofstream fout(fileOutputName, std::ios::out);
 
