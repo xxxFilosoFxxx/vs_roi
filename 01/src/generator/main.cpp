@@ -1,4 +1,4 @@
-#include <vector> 
+#include <vector>
 #include <ctime>
 #include <iostream>
 #include <string>
