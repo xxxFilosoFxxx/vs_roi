@@ -30,7 +30,7 @@ int main(int argc_p, char ** argv_p) {
 		}
 	}
 
-	if (strcmp(argv_p[4], "") == 0) {
+	if ((std::string(argv_p[4]) == "") {
 		std::cerr << "Invalid command line arguments" << std::endl;
 		return -1;
 	}
