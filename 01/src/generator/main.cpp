@@ -43,7 +43,7 @@ int main(int argc_p, char ** argv_p) {
 	std::string fileOutName = argv_p[4];
 
 	std::vector<std::string> names;
-	std::string s;
+	int s;
 
 	std::ifstream file(fileCfgName, std::ios::in);
 	if (!file.is_open()) {
@@ -52,10 +52,11 @@ int main(int argc_p, char ** argv_p) {
 	}
 	else
 	{
-		while (getline(file, s))
-		{
-			names.push_back(fileOutName + s + ".txt");
+		file >> s;
+		for (int i = 1; i < s + 1; i++) {
+			names.push_back(fileOutName + std::to_string(i) + ".txt");
 		}
+
 		file.close();
 	}
 
