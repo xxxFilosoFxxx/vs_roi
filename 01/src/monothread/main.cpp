@@ -5,6 +5,7 @@
 #include <fstream>
 #include <map>
 #include <list>
+#include <chrono>
 
 int main(int argc_p, char ** argv_p) {
 	std::cout << "\n ---------------------------------\n";
@@ -32,6 +33,7 @@ int main(int argc_p, char ** argv_p) {
 		return -1;
 	}
 
+	auto start = std::chrono::steady_clock::now();
 	// Запись всех текстовых файлов
 	std::system("dir /b /o:d *.txt > list.txt");
 	std::vector<std::string>	text_names;
@@ -147,6 +149,14 @@ int main(int argc_p, char ** argv_p) {
 	fout << count_for_param << "\n";
 
 	fout.close();
+
+	auto end = std::chrono::steady_clock::now();
+	std::chrono::duration<double, std::milli> elapsed_seconds = end - start;
+
+	// Запись времени работы программы в ms
+	std::ofstream fout_time("time.txt", std::ios::out);
+	fout_time << "Количество файлов: " << names.size() << std::endl << "Время работы программы: " << elapsed_seconds.count() << "ms";
+	fout_time.close();
 
 	return 0;
 }
