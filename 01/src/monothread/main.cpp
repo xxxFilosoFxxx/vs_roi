@@ -1,162 +1,96 @@
-#include <vector>
-#include <ctime>
 #include <iostream>
-#include <string>
-#include <fstream>
-#include <map>
-#include <list>
 #include <chrono>
+#include "header.h"
 
 int main(int argc_p, char ** argv_p) {
-	std::cout << "\n ---------------------------------\n";
-	const std::size_t argumetsAmount_cl = argc_p;
-	for (std::size_t i = 0; i < argumetsAmount_cl; ++i)
-		std::cout << "\t" << argv_p[i] << "\n";
-	std::cout << " ---------------------------------\n";
+    using namespace head;
 
-	if (std::string(argv_p[1]) != "--input" || std::string(argv_p[3]) != "--output" || std::string(argv_p[5]) != "--param") {
-		std::cerr << "Invalid command line arguments" << std::endl;
-		return -1;
-	}
+    std::cout << "\n ---------------------------------\n";
+    const std::size_t argumetsAmount_cl = argc_p;
+    for (std::size_t i = 0; i < argumetsAmount_cl; ++i)
+        std::cout << "\t" << argv_p[i] << "\n";
+    std::cout << " ---------------------------------\n";
 
-	// Для общей части имени входных файлов
-	if (std::string(argv_p[2]) == "" || std::string(argv_p[4]) == "" || std::string(argv_p[6]) == "") {
-		std::cerr << "Invalid command line arguments" << std::endl;
-		return -1;
-	}
+    if (std::string(argv_p[1]) != "--input" || std::string(argv_p[3]) != "--output" || std::string(argv_p[5]) != "--param") {
+        std::cerr << "Invalid command line arguments" << std::endl;
+        return -1;
+    }
 
-	std::string fileCfgName = argv_p[4];
-	std::string name_csv = fileCfgName.substr(fileCfgName.length() - 4, 4);
+    // Для общей части имени входных файлов
+    if (std::string(argv_p[2]).empty() || std::string(argv_p[4]).empty() || std::string(argv_p[6]).empty()) {
+        std::cerr << "Invalid command line arguments" << std::endl;
+        return -1;
+    }
 
-	if (name_csv != ".csv") {
-		std::cerr << "Invalid file *.csv" << std::endl;
-		return -1;
-	}
+    // Название .csv файла
+    std::string fileCfgName = argv_p[4];
+    std::string name_csv = fileCfgName.substr(fileCfgName.length() - 4, 4);
 
-	auto start = std::chrono::steady_clock::now();
-	// Запись всех текстовых файлов
-	std::system("dir /b /o:d *.txt > list.txt");
-	std::vector<std::string>	text_names;
-	std::vector<std::string>	names;
-	std::list<int>				list_average_salary_humans;
-	std::list<int>				low_salary;
-	std::list<int>				high_salary;
-	std::list<std::string>		human_low_salary;
-	std::list<std::string>		human_high_salary;
-	std::string					list_names;
+    if (name_csv != ".csv") {
+        std::cerr << "Invalid file *.csv" << std::endl;
+        return -1;
+    }
 
-	std::map<std::string, int>  average_salary_humans;
+    // Запись всех текстовых файлов
+    std::system("dir /b /o:d *.txt > list.txt");
+    std::vector<std::string>	 text_names;
+    std::vector<std::string>	 names;
+    std::list<int>				 list_average_salary_humans;
+    std::map<std::string, int>   average_salary_humans;
+    std::queue<std::vector<int>> queue;
 
-	std::string fileInputName = argv_p[2];
+    std::string fileInputName = argv_p[2];
+    std::string param = argv_p[6];
 
-	// Запись имен нужных файлов в map
-	std::ifstream list("list.txt", std::ios::in);
-	if (!list.is_open()) {
-		std::cerr << "*.txt files not found" << std::endl;
-		return -1;
-	}
-	else {
-		while (!list.eof())
-		{
-			list >> list_names;
-			std::string one_name = list_names;
-			one_name.resize(fileInputName.size());
-			if (one_name == fileInputName) {
-				text_names.push_back(list_names);
-				names.push_back(list_names.substr(0, list_names.length() - 4));
-			}
-		}
-	}
+    std::ifstream list("list.txt", std::ios::in);
+    if (!list.is_open()) {
+        std::cerr << "*.txt files not found" << std::endl;
+        return -1;
+    }
 
-	auto it1 = text_names.begin();
-	auto it2 = names.begin();
+    writeNames(text_names, names, fileInputName, list);
 
-	// Открытие каждого текстового файла для нахождения среднего значения и составление пар [человек(название файла)] -> Ср. зп
-	// И запись среднего значения в список для работы с суммами
-	while (it1 != text_names.end() && it2 != names.end()) {
-		std::ifstream fin(*it1, std::ios::in);
-		int average_salary = 0;
-		for (int i = 0; i < 12; i++) {
-			int num;
-			fin >> num;
-			average_salary += num;
-		}
-		average_salary = average_salary / 12;
-		average_salary_humans[*it2] = average_salary;
-		list_average_salary_humans.push_back(average_salary);
-		fin.close();
-		++it1;
-		++it2;
-	}
+    auto start = std::chrono::steady_clock::now();
 
-	int size = list_average_salary_humans.size();
-	size = int(size * 0.05);
+    queue = opendAndRead(text_names);
+    average(names, average_salary_humans, list_average_salary_humans, queue);
+    Names_percent namesPercent = percent(list_average_salary_humans, average_salary_humans);
+    int salary_limit = below_the_set_value(param, list_average_salary_humans);
 
-	std::string param = argv_p[6];
-	int count_for_param = 0;
-	int int_param = std::stoi(param);
+    auto end = std::chrono::steady_clock::now();
+    std::chrono::duration<double, std::milli> elapsed_seconds = end - start;
 
-	// зп ниже среднего
-	for (int n : list_average_salary_humans) {
-		if (n < int_param)
-			count_for_param++;
-	}
+    // Запись времени работы программы в ms
+    std::ofstream fout_time("time.txt", std::ios::out);
+    fout_time << "Количество файлов: " << names.size() << std::endl << "Время работы программы: " << elapsed_seconds.count() << "ms";
+    fout_time.close();
 
-	list_average_salary_humans.sort();
-	low_salary = list_average_salary_humans;
-	low_salary.resize(size);
+    // Работа с csv файлом
+    std::string fileOutputName = argv_p[4];
+    std::ofstream fout(fileOutputName, std::ios::out);
 
-	list_average_salary_humans.reverse();
-	high_salary = list_average_salary_humans;
-	high_salary.resize(size);
+    fout << "Гражданин, Среднемесячная зарплата" << "\n";
+    for (auto & average_salary_human : average_salary_humans) {
+        fout << average_salary_human.first << ", " << average_salary_human.second << "\n";
+    }
 
-	// 5% на max и min зп
-	for (auto it = average_salary_humans.begin(); it != average_salary_humans.end(); it++) {
-		for (int n : low_salary) {
-			if (it->second == n)
-				human_low_salary.push_back(it->first);
-		}
+    fout << "\n";
+    fout << "5% граждан с max зп, 5% граждан с min зп" << "\n";
 
-		for (int n : high_salary) {
-			if (it->second == n)
-				human_high_salary.push_back(it->first);
-		}
-	}
+    auto it1 = namesPercent.human_high_salary.begin();
+    auto it2 = namesPercent.human_low_salary.begin();
 
-	// Работа с csv файлом
-	std::string fileOutputName = argv_p[4];
-	std::ofstream fout(fileOutputName, std::ios::out);
+    while (it1 != namesPercent.human_high_salary.end() && it2 != namesPercent.human_low_salary.end()) {
+        fout << *it1 << ", " << *it2 << "\n";
+        ++it1;
+        ++it2;
+    }
+    fout << "\n";
 
-	fout << "Гражданин, Среднемесячная зарплата" << "\n";
-	for (auto it = average_salary_humans.begin(); it != average_salary_humans.end(); it++) {
-		fout << it->first << ", " << it->second << "\n";
-	}
+    fout << "Количество граждан с зп ниже среднего" << "\n";
+    fout << salary_limit << "\n";
 
-	fout << "\n";
-	fout << "5% граждан с max зп, 5% граждан с min зп" << "\n";
+    fout.close();
 
-	auto it3 = human_high_salary.begin();
-	auto it4 = human_low_salary.begin();
-
-	while (it3 != human_high_salary.end() && it4 != human_low_salary.end()) {
-		fout << *it3 << ", " << *it4 << "\n";
-		++it3;
-		++it4;
-	}
-	fout << "\n";
-
-	fout << "Количество граждан с зп ниже среднего" << "\n";
-	fout << count_for_param << "\n";
-
-	fout.close();
-
-	auto end = std::chrono::steady_clock::now();
-	std::chrono::duration<double, std::milli> elapsed_seconds = end - start;
-
-	// Запись времени работы программы в ms
-	std::ofstream fout_time("time.txt", std::ios::out);
-	fout_time << "Количество файлов: " << names.size() << std::endl << "Время работы программы: " << elapsed_seconds.count() << "ms";
-	fout_time.close();
-
-	return 0;
+    return 0;
 }
