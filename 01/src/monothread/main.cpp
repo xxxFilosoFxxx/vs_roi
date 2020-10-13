@@ -49,10 +49,10 @@ int main(int argc_p, char ** argv_p) {
     }
 
     writeNames(text_names, names, fileInputName, list);
+    queue = opendAndRead(text_names);
 
     auto start = std::chrono::steady_clock::now();
 
-    queue = opendAndRead(text_names);
     average(names, average_salary_humans, list_average_salary_humans, queue);
     Names_percent namesPercent = percent(list_average_salary_humans, average_salary_humans);
     int salary_limit = below_the_set_value(param, list_average_salary_humans);
