@@ -40,6 +40,7 @@ int main(int argc_p, char ** argv_p) {
 	std::map<std::string, int>   average_salary_humans;
 	std::queue<std::vector<int>> queue;
 	int below_average = 0;
+	int number = 0;
 
 	std::string fileInputName = argv_p[2];
 	std::string param = argv_p[6];
@@ -58,7 +59,7 @@ int main(int argc_p, char ** argv_p) {
 	unsigned int Current_Hardware = std::thread::hardware_concurrency();
 
 	for (unsigned int i = 0; i < Current_Hardware; i++) {
-		Threads.push_back(std::thread(average, std::ref(names), std::ref(average_salary_humans), std::ref(list_average_salary_humans), std::ref(queue)));
+		Threads.push_back(std::thread(average, std::ref(number), std::ref(names), std::ref(average_salary_humans), std::ref(list_average_salary_humans), std::ref(queue)));
 	}
 
 	Threads_two.push_back(std::thread(percent, std::ref(list_average_salary_humans), std::ref(average_salary_humans), std::ref(human_low_salary), std::ref(human_high_salary)));

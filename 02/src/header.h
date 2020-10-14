@@ -54,12 +54,13 @@ namespace head {
 	}
 
 	// Высчитвание средней зп и запись в map для вывода в .csv файл
-	void average(std::vector<std::string>	  &names,
+	void average(int						  &size,
+				 std::vector<std::string>	  &names,
 				 std::map<std::string, int>   &average_salary_humans,
 				 std::list<int>               &list_average_salary_humans,
 				 std::queue<std::vector<int>> &queue) {
 
-		for (auto& _names : names) {
+		while (true) {
 			std::lock_guard<std::mutex> lock(mutex);
 
 			if (queue.size() == 0) {
@@ -74,8 +75,9 @@ namespace head {
 			}
 			queue.pop();
 			average_salary = average_salary / 12;
-			average_salary_humans[_names] = average_salary;
+			average_salary_humans[names.at(size)] = average_salary;
 			list_average_salary_humans.push_back(average_salary);
+			size++;
 		}
 	}
 
