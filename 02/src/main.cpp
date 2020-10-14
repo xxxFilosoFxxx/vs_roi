@@ -1,6 +1,4 @@
 #include <iostream>
-#include <chrono>
-#include <thread>
 #include "header.h"
 
 int main(int argc_p, char ** argv_p) {
@@ -36,9 +34,12 @@ int main(int argc_p, char ** argv_p) {
 	std::system("dir /b /o:d *.txt > list.txt");
 	std::vector<std::string>	 text_names;
 	std::vector<std::string>	 names;
+	std::list<std::string>		 human_low_salary;
+	std::list<std::string>		 human_high_salary;
 	std::list<int>				 list_average_salary_humans;
 	std::map<std::string, int>   average_salary_humans;
 	std::queue<std::vector<int>> queue;
+	int below_average = 0;
 
 	std::string fileInputName = argv_p[2];
 	std::string param = argv_p[6];
@@ -53,18 +54,25 @@ int main(int argc_p, char ** argv_p) {
 	queue = opendAndRead(text_names);
 
 	std::vector<std::thread> Threads;
+	std::vector<std::thread> Threads_two;
 	unsigned int Current_Hardware = std::thread::hardware_concurrency();
+
 	for (unsigned int i = 0; i < Current_Hardware; i++) {
 		Threads.push_back(std::thread(average, std::ref(names), std::ref(average_salary_humans), std::ref(list_average_salary_humans), std::ref(queue)));
 	}
+
+	Threads_two.push_back(std::thread(percent, std::ref(list_average_salary_humans), std::ref(average_salary_humans), std::ref(human_low_salary), std::ref(human_high_salary)));
+	Threads_two.push_back(std::thread(below_the_set_value, param, std::ref(list_average_salary_humans), std::ref(below_average)));
 
 	auto start = std::chrono::steady_clock::now();
 
 	for (auto& threads : Threads) {
 		threads.join();
 	}
-	Names_percent namesPercent = percent(list_average_salary_humans, average_salary_humans);
-	int salary_limit = below_the_set_value(param, list_average_salary_humans);
+
+	for (auto& threads : Threads_two) {
+		threads.join();
+	}
 
 	auto end = std::chrono::steady_clock::now();
 	std::chrono::duration<double, std::milli> elapsed_seconds = end - start;
@@ -86,10 +94,10 @@ int main(int argc_p, char ** argv_p) {
 	fout << "\n";
 	fout << "5% граждан с max зп, 5% граждан с min зп" << "\n";
 
-	auto it1 = namesPercent.human_high_salary.begin();
-	auto it2 = namesPercent.human_low_salary.begin();
+	auto it1 = human_high_salary.begin();
+	auto it2 = human_low_salary.begin();
 
-	while (it1 != namesPercent.human_high_salary.end() && it2 != namesPercent.human_low_salary.end()) {
+	while (it1 != human_high_salary.end() && it2 != human_low_salary.end()) {
 		fout << *it1 << ", " << *it2 << "\n";
 		++it1;
 		++it2;
@@ -97,9 +105,12 @@ int main(int argc_p, char ** argv_p) {
 	fout << "\n";
 
 	fout << "Количество граждан с зп ниже среднего" << "\n";
-	fout << salary_limit << "\n";
+	fout << below_average << "\n";
 
 	fout.close();
 
 	return 0;
 }
+//подсчитываешь общую среднюю зп ThreadPool
+//3 потока. Общие данные - массив средних зарплат
+//в каждой функции данные не меняются, возвращается новый объект

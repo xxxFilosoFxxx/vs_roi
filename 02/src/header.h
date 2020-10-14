@@ -6,29 +6,18 @@
 #include <vector>
 #include <list>
 #include <queue>
+#include <thread>
 #include <mutex>
+#include <chrono>
 
 std::mutex mutex;
 
 namespace head {
-	struct Names_percent {
-		std::list<std::string> human_low_salary;
-		std::list<std::string> human_high_salary;
-
-		Names_percent() = default;
-
-		Names_percent(std::list<std::string> human_low_salary,
-			std::list<std::string> human_high_salary) {
-			this->human_low_salary = human_low_salary;
-			this->human_high_salary = human_high_salary;
-		}
-	};
-
 	// Запись имен нужных файлов
 	void writeNames(std::vector<std::string> &text_names,
-		std::vector<std::string> &names,
-		std::string              fileInputName,
-		std::ifstream            &list) {
+					std::vector<std::string> &names,
+					std::string              fileInputName,
+					std::ifstream            &list) {
 
 		while (!list.eof())
 		{
@@ -65,15 +54,18 @@ namespace head {
 	}
 
 	// Высчитвание средней зп и запись в map для вывода в .csv файл
-	void average(std::vector<std::string>     &names,
-		std::map<std::string, int>   &average_salary_humans,
-		std::list<int>               &list_average_salary_humans,
-		std::queue<std::vector<int>> &queue) {
+	void average(std::vector<std::string>	  &names,
+				 std::map<std::string, int>   &average_salary_humans,
+				 std::list<int>               &list_average_salary_humans,
+				 std::queue<std::vector<int>> &queue) {
 
-		// TODO:
-		std::lock_guard<std::mutex> lock(mutex);
 		for (auto& _names : names) {
-			//mutex.lock();
+			std::lock_guard<std::mutex> lock(mutex);
+
+			if (queue.size() == 0) {
+				break;
+			}
+
 			int average_salary = 0;
 			std::vector<int> vec = queue.front();
 			for (int i = 0; i < 12; i++) {
@@ -84,21 +76,20 @@ namespace head {
 			average_salary = average_salary / 12;
 			average_salary_humans[_names] = average_salary;
 			list_average_salary_humans.push_back(average_salary);
-			//mutex.unlock();
 		}
 	}
 
 	// 5% на max и min зп
-	Names_percent percent(std::list<int> &list_average_salary_humans,
-		std::map<std::string, int> &average_salary_humans) {
+	void percent(std::list<int> &list_average_salary_humans,
+				 std::map<std::string, int> &average_salary_humans,
+				 std::list<std::string> &human_low_salary,
+				 std::list<std::string> &human_high_salary) {
 
 		int size = list_average_salary_humans.size();
 		size = int(size * 0.05);
 
 		std::list<int>         low_salary;
 		std::list<int>         high_salary;
-		std::list<std::string> human_low_salary;
-		std::list<std::string> human_high_salary;
 
 		list_average_salary_humans.sort();
 		low_salary = list_average_salary_humans;
@@ -119,22 +110,18 @@ namespace head {
 					human_high_salary.push_back(average_salary_human.first);
 			}
 		}
-
-		Names_percent namesPercent = Names_percent(human_low_salary, human_high_salary);
-		return namesPercent;
 	}
 
 	// зп ниже среднего
-	int below_the_set_value(std::string param,
-		std::list<int> &list_average_salary_humans) {
-		int count_for_param = 0;
+	void below_the_set_value(std::string param,
+							std::list<int> &list_average_salary_humans,
+							int &count_for_param) {
+
 		int int_param = std::stoi(param);
 
 		for (int n : list_average_salary_humans) {
 			if (n < int_param)
 				count_for_param++;
 		}
-
-		return count_for_param;
 	}
 }
