@@ -7,10 +7,7 @@
 #include <list>
 #include <queue>
 #include <thread>
-#include <mutex>
 #include <chrono>
-
-std::mutex mutex;
 
 namespace head {
 	// Запись имен нужных файлов
@@ -34,9 +31,9 @@ namespace head {
 
 	// Открытие каждого текстового файла для нахождения и запись каждой числа в вектор значений
 	// В дальнейшем вектора заходят в очередь векторов
-	std::queue<std::vector<int>> opendAndRead(std::vector<std::string> &text_names) {
+	std::vector<std::vector<int>> opendAndRead(std::vector<std::string> &text_names) {
 
-		std::queue<std::vector<int>> queue;
+		std::vector<std::vector<int>> vector;
 
 		for (auto& _names : text_names) {
 			std::ifstream fin(_names, std::ios::in);
@@ -46,43 +43,37 @@ namespace head {
 				fin >> num;
 				vec.push_back(num);
 			}
-			queue.push(vec);
+			vector.push_back(vec);
 			fin.close();
 		}
 
-		return queue;
+		return vector;
 	}
 
 	// Высчитвание средней зп и запись в map для вывода в .csv файл
-	void average(int						  &size,
-				 std::vector<std::string>	  &names,
-				 std::map<std::string, int>   &average_salary_humans,
-				 std::list<int>               &list_average_salary_humans,
-				 std::queue<std::vector<int>> &queue) {
+	void average(size_t						   first,
+				 size_t						   last,
+				 std::vector<std::string>	   &names,
+				 std::map<std::string, int>    &average_salary_humans,
+				 std::list<int>                &list_average_salary_humans,
+				 std::vector<std::vector<int>> vector) {
 
-		while (true) {
-			std::lock_guard<std::mutex> lock(mutex);
-
-			if (queue.size() == 0) {
-				break;
-			}
-
+		for (auto i = first; i < last; ++i) {
 			int average_salary = 0;
-			std::vector<int> vec = queue.front();
-			for (int i = 0; i < 12; i++) {
-				int num = vec.at(i);
+			std::vector<int> vec = vector[i];
+			for (int j = 0; j < 12; j++) {
+				int num = vec.at(j);
 				average_salary += num;
 			}
-			queue.pop();
+
 			average_salary = average_salary / 12;
-			average_salary_humans[names.at(size)] = average_salary;
+			average_salary_humans[names.at(i)] = average_salary;
 			list_average_salary_humans.push_back(average_salary);
-			size++;
 		}
 	}
 
 	// 5% на max и min зп
-	void percent(std::list<int> &list_average_salary_humans,
+	void percent(std::list<int> list_average_salary_humans,
 				 std::map<std::string, int> &average_salary_humans,
 				 std::list<std::string> &human_low_salary,
 				 std::list<std::string> &human_high_salary) {

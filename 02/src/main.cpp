@@ -1,7 +1,7 @@
 #include <iostream>
 #include "header.h"
 
-int main(int argc_p, char ** argv_p) {
+int main(int argc_p, char **argv_p) {
 	using namespace head;
 
 	std::cout << "\n ---------------------------------\n";
@@ -38,9 +38,8 @@ int main(int argc_p, char ** argv_p) {
 	std::list<std::string>		 human_high_salary;
 	std::list<int>				 list_average_salary_humans;
 	std::map<std::string, int>   average_salary_humans;
-	std::queue<std::vector<int>> queue;
+	std::vector<std::vector<int>> vector;
 	int below_average = 0;
-	int number = 0;
 
 	std::string fileInputName = argv_p[2];
 	std::string param = argv_p[6];
@@ -52,31 +51,48 @@ int main(int argc_p, char ** argv_p) {
 	}
 
 	writeNames(text_names, names, fileInputName, list);
-	queue = opendAndRead(text_names);
+	vector = opendAndRead(text_names);
 
-	std::vector<std::thread> Threads;
-	std::vector<std::thread> Threads_two;
-	unsigned int Current_Hardware = std::thread::hardware_concurrency();
-
-	for (unsigned int i = 0; i < Current_Hardware; i++) {
-		Threads.push_back(std::thread(average, std::ref(number), std::ref(names), std::ref(average_salary_humans), std::ref(list_average_salary_humans), std::ref(queue)));
+	// Максимальное кол-во оптимально открытых потоков и разделение размерности вектора
+	const auto Current_Hardware = std::thread::hardware_concurrency();
+	size_t vecSize = 0;
+	if (vector.size() % Current_Hardware == 0) {
+		vecSize = vector.size() / Current_Hardware;
+	}
+	else {
+		vecSize = (vector.size() / Current_Hardware) + 1;
 	}
 
-	Threads_two.push_back(std::thread(percent, std::ref(list_average_salary_humans), std::ref(average_salary_humans), std::ref(human_low_salary), std::ref(human_high_salary)));
-	Threads_two.push_back(std::thread(below_the_set_value, param, std::ref(list_average_salary_humans), std::ref(below_average)));
+	size_t first = 0;
+	size_t last = vecSize;
 
-	auto start = std::chrono::steady_clock::now();
+	std::vector<std::thread> Threads;
+
+	for (unsigned int i = 0; i < Current_Hardware; i++) {
+		Threads.push_back(std::thread(average, first, last, std::ref(names), std::ref(average_salary_humans), std::ref(list_average_salary_humans), vector));
+		first += vecSize;
+		last = std::min(last + vecSize, vector.size());
+	}
+
+	auto start1 = std::chrono::steady_clock::now();
 
 	for (auto& threads : Threads) {
 		threads.join();
 	}
 
-	for (auto& threads : Threads_two) {
-		threads.join();
-	}
+	auto end1 = std::chrono::steady_clock::now();
+	std::chrono::duration<double, std::milli> elapsed_seconds = end1 - start1;
 
-	auto end = std::chrono::steady_clock::now();
-	std::chrono::duration<double, std::milli> elapsed_seconds = end - start;
+	std::thread t1 = std::thread(percent, list_average_salary_humans, std::ref(average_salary_humans), std::ref(human_low_salary), std::ref(human_high_salary));
+	std::thread t2 = std::thread(below_the_set_value, param, std::ref(list_average_salary_humans), std::ref(below_average));
+
+	auto start2 = std::chrono::steady_clock::now();
+
+	t1.join();
+	t2.join();
+
+	auto end2 = std::chrono::steady_clock::now();
+	elapsed_seconds += end2 - start2;
 
 	// Запись времени работы программы в ms
 	std::ofstream fout_time("time.txt", std::ios::out);
@@ -112,6 +128,3 @@ int main(int argc_p, char ** argv_p) {
 
 	return 0;
 }
-//подсчитываешь общую среднюю зп ThreadPool
-//3 потока. Общие данные - массив средних зарплат
-//в каждой функции данные не меняются, возвращается новый объект
