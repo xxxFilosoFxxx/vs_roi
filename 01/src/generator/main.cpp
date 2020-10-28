@@ -11,7 +11,7 @@ int main(int argc_p, char ** argv_p) {
 		std::cout << "\t" << argv_p[i] << "\n";
 	std::cout << " ---------------------------------\n";
 
-	if (std::string(argv_p[1]) != "--config" || std::string(argv_p[3]) != "--outfile") {
+	if (std::string(argv_p[1]) != "--config" || std::string(argv_p[3]) != "--output") {
 		std::cerr << "Invalid command line arguments" << std::endl;
 		return -1;
 	}
