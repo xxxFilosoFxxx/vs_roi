@@ -84,8 +84,8 @@ namespace head {
     Names_percent percent(std::list<int>& list_average_salary_humans,
                           std::map<std::string, int>& average_salary_humans) {
 
-        int size = list_average_salary_humans.size();
-        size = int(size * 0.05);
+        size_t size = list_average_salary_humans.size();
+        size = size_t(size * 0.05);
 
         std::list<int>         low_salary;
         std::list<int>         high_salary;

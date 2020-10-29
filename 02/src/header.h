@@ -78,8 +78,8 @@ namespace head {
 				 std::list<std::string> &human_low_salary,
 				 std::list<std::string> &human_high_salary) {
 
-		int size = list_average_salary_humans.size();
-		size = int(size * 0.05);
+		size_t size = list_average_salary_humans.size();
+		size = size_t(size * 0.05);
 
 		std::list<int>         low_salary;
 		std::list<int>         high_salary;
