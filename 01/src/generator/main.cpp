@@ -1,4 +1,4 @@
-#include <vector>
+#include <vector> 
 #include <ctime>
 #include <iostream>
 #include <string>
@@ -30,7 +30,7 @@ int main(int argc_p, char ** argv_p) {
 		}
 	}
 
-	if ((std::string(argv_p[4]) == "") {
+	if (std::string(argv_p[4]) == "") {
 		std::cerr << "Invalid command line arguments" << std::endl;
 		return -1;
 	}
@@ -43,6 +43,7 @@ int main(int argc_p, char ** argv_p) {
 	std::string fileOutName = argv_p[4];
 
 	std::vector<std::string> names;
+	std::vector<int> names_int;
 	int s;
 
 	std::ifstream file(fileCfgName, std::ios::in);
@@ -52,21 +53,29 @@ int main(int argc_p, char ** argv_p) {
 	}
 	else
 	{
-		file >> s;
-		for (int i = 1; i < s + 1; i++) {
-			names.push_back(fileOutName + std::to_string(i) + ".txt");
+		while (!file.eof())
+		{
+			file >> s;
+			names_int.push_back(s);
+			names.push_back(fileOutName + std::to_string(s) + ".txt");
 		}
-
+		
 		file.close();
 	}
 
+	auto i = names_int.begin();
 	for (auto it : names) {
 		std::ofstream fout(it, std::ios::out);
-		for (int i = 0; i < 12; i++) {
-			random_values[i] = min + (double)rand() / (RAND_MAX + 1)*(max - min);
-			fout << int(random_values[i]) << std::endl;
+		for (int j = 0; j < *i; j++) {
+			for (int i = 0; i < 12; i++) {
+				random_values[i] = min + (double)rand() / (RAND_MAX + 1)*(max - min);
+				fout << int(random_values[i]) << std::endl;
+			}
+			fout << std::endl;
 		}
+		
 		fout.close();
+		++i;
 	}
 
 	return 0;

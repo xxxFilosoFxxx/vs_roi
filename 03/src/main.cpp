@@ -39,10 +39,7 @@ int main(int argc_p, char **argv_p) {
 	std::system("dir /b /o:d *.txt > list.txt");
 	std::vector<std::string>	  text_names;
 	std::vector<std::string>	  names;
-	std::list<std::string>		  human_low_salary;
-	std::list<std::string>		  human_high_salary;
-	std::vector<std::vector<int>> vector;
-	int below_average = 0;
+	std::multimap<int, std::string> average_salary_humans;
 
 	std::string fileInputName = argv_p[2];
 	std::string param = argv_p[6];
@@ -53,80 +50,87 @@ int main(int argc_p, char **argv_p) {
 		return -1;
 	}
 
-	writeNames(text_names, names, fileInputName, list);
-	vector = opendAndRead(text_names);
+	writeNames(text_names, fileInputName, list);
 
-	// Максимальное кол-во оптимально открытых потоков и разделение размерности вектора
-	const auto Current_Hardware = std::thread::hardware_concurrency();
-	size_t vecSize = 0;
-	if (vector.size() % Current_Hardware == 0) {
-		vecSize = vector.size() / Current_Hardware;
+	std::vector<std::vector<std::vector<std::vector<int>>>> my_vector = opendAndRead(text_names);
+
+	std::chrono::duration<double, std::milli> elapsed_seconds;
+	int salary_limit = 0;
+
+	// Открытие файла для записи времени работы
+	std::string fileOutputName = argv_p[4];
+	std::ofstream fout_time(fileOutputName, std::ios::out);
+	fout_time << "Количество значений, " << "время работы программы в `ms`" << std::endl;
+	for (int i = 0; i < int(my_vector.size()); i++) {
+		// Максимальное кол-во оптимально открытых потоков и разделение размерности вектора
+		const auto Current_Hardware = std::thread::hardware_concurrency();
+		size_t vecSize = 0;
+		if (my_vector[i].size() % Current_Hardware == 0) {
+			vecSize = my_vector[i].size() / Current_Hardware;
+		}
+		else {
+			vecSize = (my_vector[i].size() / Current_Hardware) + 1;
+		}
+
+		size_t first = 0;
+		size_t last = vecSize;
+
+		std::vector<Value_average> tasks;
+
+		names = names_persones(my_vector[i]);
+
+		for (unsigned int j = 0; j < Current_Hardware; ++j) {
+			tasks.push_back(Value_average(names, my_vector[i], first, last));
+			first += vecSize;
+			last = std::min(last + vecSize, my_vector[i].size());
+		}
+
+		auto start = std::chrono::steady_clock::now();
+
+		average_salary_humans = QtConcurrent::blockingMappedReduced(tasks, mapAverage, reduceAverage);
+
+		salary_limit = below_the_set_value(param, average_salary_humans);
+
+		auto end = std::chrono::steady_clock::now();
+		std::chrono::duration<double, std::milli> elapsed_seconds = end - start;
+
+		// Запись времени работы программы в ms
+		fout_time << names.size() << ", " << elapsed_seconds.count() << std::endl;
 	}
-	else {
-		vecSize = (vector.size() / Current_Hardware) + 1;
-	}
 
-	size_t first = 0;
-	size_t last = vecSize;
-
-	//using Tasks = std::vector<Value_average>;
-	std::vector<Value_average> tasks;
-
-	for (unsigned int i = 0; i < Current_Hardware; ++i) {
-		tasks.push_back(Value_average(names, vector, first, last));
-		first += vecSize;
-		last = std::min(last + vecSize, vector.size());
-	}
-
-	auto start1 = std::chrono::steady_clock::now();
-
-	Names_average namesAverage = QtConcurrent::blockingMappedReduced(tasks, mapAverage, reduceAverage);
-
-	auto end1 = std::chrono::steady_clock::now();
-	std::chrono::duration<double, std::milli> elapsed_seconds = end1 - start1;
-
-	std::thread t1 = std::thread(percent, namesAverage.list_average_salary_humans, std::ref(namesAverage.average_salary_humans), std::ref(human_low_salary), std::ref(human_high_salary));
-	std::thread t2 = std::thread(below_the_set_value, param, std::ref(namesAverage.list_average_salary_humans), std::ref(below_average));
-
-	auto start2 = std::chrono::steady_clock::now();
-
-	t1.join();
-	t2.join();
-
-	auto end2 = std::chrono::steady_clock::now();
-	elapsed_seconds += end2 - start2;
-
-	// Запись времени работы программы в ms
-	std::ofstream fout_time("time.txt", std::ios::out);
-	fout_time << "Количество файлов: " << names.size() << std::endl << "Время работы программы: " << elapsed_seconds.count() << "ms";
 	fout_time.close();
 
 	// Работа с csv файлом
-	std::string fileOutputName = argv_p[4];
+	/*std::string fileOutputName = argv_p[4];
 	std::ofstream fout(fileOutputName, std::ios::out);
 
 	fout << "Гражданин, Среднемесячная зарплата" << "\n";
-	for (auto & average_salary_human : namesAverage.average_salary_humans) {
-		fout << average_salary_human.first << ", " << average_salary_human.second << "\n";
+	for (auto & average_salary_human : average_salary_humans) {
+		fout << average_salary_human.second << ", " << average_salary_human.first << "\n";
 	}
 
 	fout << "\n";
 	fout << "5% граждан с max зп, 5% граждан с min зп" << "\n";
 
-	auto it1 = human_high_salary.begin();
-	auto it2 = human_low_salary.begin();
+	auto it1 = average_salary_humans.rbegin();
+	auto it2 = average_salary_humans.begin();
 
-	while (it1 != human_high_salary.end() && it2 != human_low_salary.end()) {
-		fout << *it1 << ", " << *it2 << "\n";
+	size_t size = average_salary_humans.size();
+	size = size_t(size * 0.05);
+	size_t count = 0;
+
+	while (count < size) {
+		fout << it1->second << ", " << it2->second << "\n";
 		++it1;
 		++it2;
+		count++;
 	}
 	fout << "\n";
 
 	fout << "Количество граждан с зп ниже среднего" << "\n";
-	fout << below_average << "\n";
+	fout << salary_limit << "\n";
 
-	fout.close();
+	fout.close();*/
 
 	return 0;
 }

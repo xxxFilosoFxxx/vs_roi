@@ -1,1 +1,1 @@
-## Repository for tasks ROI
+## Repository for tasks ROI (distributed information processing)
